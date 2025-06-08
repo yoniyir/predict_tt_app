@@ -20,17 +20,22 @@ def np_encoder(object):
 
 @app.route('/')
 @app.route('/get_players')
-def get_players():
+def get_players_endpoint():
+    """Return the list of players for the front end."""
     return players
 
 
-@app.route('/predict', methods=['GET', 'POST', 'DELETE', 'PATCH'])
+@app.route('/predict', methods=['POST'])
 def predict():
-    if request.method == 'POST':
-        p1_id = request.get_json()['p1_id']
-        p2_id = request.get_json()['p2_id']
-        game = create_match(p1_id, p2_id)
-    score = rf_model. predict(game)
+    """Predict the match winner using the trained model."""
+    data = request.get_json() or {}
+    p1_id = data.get('p1_id')
+    p2_id = data.get('p2_id')
+    if p1_id is None or p2_id is None:
+        return json.dumps({'error': 'p1_id and p2_id are required'}), 400
+
+    game = create_match(p1_id, p2_id)
+    score = rf_model.predict(game)
     result = game.to_dict()
     print(result)
     if (list(result['diff'].values())[0] >= 80) & (score[0] == 0):
